@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import Decimal from 'decimal.js'
 import type { EChartsOption } from 'echarts'
 import { RouterLink } from 'vue-router'
 import AppleButton from '@/components/ui/AppleButton.vue'
@@ -9,6 +10,7 @@ import AppleDataBadge from '@/components/ui/AppleDataBadge.vue'
 import AppleMetric from '@/components/ui/AppleMetric.vue'
 import ApplePageHeader from '@/components/ui/ApplePageHeader.vue'
 import AppleReveal from '@/components/ui/AppleReveal.vue'
+import AppleSegmentedControl from '@/components/ui/AppleSegmentedControl.vue'
 import AppleSectionTitle from '@/components/ui/AppleSectionTitle.vue'
 import { calculateSummary, formatSummaryMoney } from './summary-calculator'
 import { useTransactionStore } from '@/features/transactions/transaction-store'
@@ -16,6 +18,26 @@ import { formatMoney } from '@/lib/money'
 
 const store = useTransactionStore()
 const summary = computed(() => calculateSummary(store.transactions, store.assets))
+const recentSpendFilter = ref<'all' | 'paid' | 'free'>('all')
+const recentSpendOptions = [
+  { label: '全部', value: 'all' },
+  { label: '付费', value: 'paid' },
+  { label: '免费', value: 'free' },
+] satisfies Array<{ label: string; value: 'all' | 'paid' | 'free' }>
+
+const storeCreditSpentRatio = computed(() => {
+  if (summary.value.storeCreditRecharge.lte(0)) return 0
+  return Decimal.min(summary.value.storeCreditSpend.div(summary.value.storeCreditRecharge).times(100), 100).toNumber()
+})
+
+const recentTransactions = computed(() => {
+  return summary.value.recentTransactions.filter((item) => {
+    const paid = isPaidTransaction(item)
+    if (recentSpendFilter.value === 'paid') return paid
+    if (recentSpendFilter.value === 'free') return item.isFree
+    return true
+  })
+})
 
 const yearlyOption = computed<EChartsOption>(() => ({
   color: ['#1d1d1f', '#0071e3'],
@@ -61,10 +83,11 @@ const categoryOption = computed<EChartsOption>(() => ({
     {
       name: '类别',
       type: 'pie',
-      radius: ['54%', '72%'],
-      center: ['50%', '43%'],
+      radius: ['58%', '74%'],
+      center: ['50%', '42%'],
       avoidLabelOverlap: true,
-      label: { formatter: '{b}', color: '#1d1d1f' },
+      label: { show: false },
+      labelLine: { show: false },
       data: summary.value.byCategory.slice(0, 8).map((item) => ({ name: item.name, value: item.value.toNumber() })),
     },
   ],
@@ -95,6 +118,25 @@ const paymentOption = computed<EChartsOption>(() => ({
     },
   ],
 }))
+
+function isStoreCreditPayment(paymentMethod?: string): boolean {
+  return String(paymentMethod ?? '').toUpperCase().includes('STORE CREDIT')
+}
+
+function isPaidTransaction(item: { cashImpact: boolean; paymentMethod?: string; isFree: boolean; amount: string }): boolean {
+  if (item.cashImpact) return true
+  if (item.isFree) return false
+  return isStoreCreditPayment(item.paymentMethod) && Number(item.amount) !== 0
+}
+
+function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFree: boolean; amount: string; currency?: string }) {
+  if (item.isFree) return { tone: 'default' as const, label: '免费' }
+  if (item.cashImpact) return { tone: 'green' as const, label: formatMoney(item.amount, item.currency) }
+  if (isStoreCreditPayment(item.paymentMethod) && !item.isFree && Number(item.amount) !== 0) {
+    return { tone: 'orange' as const, label: formatMoney(item.amount, item.currency) }
+  }
+  return { tone: 'orange' as const, label: formatMoney(item.amount, item.currency) }
+}
 </script>
 
 <template>
@@ -166,11 +208,36 @@ const paymentOption = computed<EChartsOption>(() => ({
           <AppleChart :option="paymentOption" height="300px" />
         </AppleCard>
 
-        <AppleCard>
-          <AppleSectionTitle title="Store Credit" description="区分充值和余额消费，避免重复计算。" />
-          <div class="grid gap-3 sm:grid-cols-2">
-            <AppleMetric label="现金充值" :value="formatSummaryMoney(summary.storeCreditRecharge)" tone="quiet" />
-            <AppleMetric label="余额消费去向" :value="formatSummaryMoney(summary.storeCreditSpend)" tone="quiet" />
+        <AppleCard tone="raised">
+          <AppleSectionTitle title="Apple Store 充值" description="区分充值、余额消费和当前剩余，避免重复计算。" />
+          <div class="grid gap-3 md:grid-cols-3">
+            <div class="rounded-[var(--radius-panel)] bg-apple-bg p-4">
+              <p class="text-sm text-apple-gray">累计充值</p>
+              <p class="mt-2 text-3xl font-semibold">{{ formatSummaryMoney(summary.storeCreditRecharge) }}</p>
+              <p class="mt-2 text-sm text-[#515154]">外部渠道充入 Apple 账户。</p>
+            </div>
+            <div class="rounded-[var(--radius-panel)] bg-apple-bg p-4">
+              <p class="text-sm text-apple-gray">已消费</p>
+              <p class="mt-2 text-3xl font-semibold">{{ formatSummaryMoney(summary.storeCreditSpend) }}</p>
+              <p class="mt-2 text-sm text-[#515154]">账户余额已用金额。</p>
+            </div>
+            <div class="rounded-[var(--radius-panel)] bg-apple-bg p-4">
+              <p class="text-sm text-apple-gray">当前余额</p>
+              <p class="mt-2 text-3xl font-semibold">{{ formatSummaryMoney(summary.storeCreditBalance) }}</p>
+              <p class="mt-2 text-sm text-[#515154]">按导入记录估算剩余。</p>
+            </div>
+          </div>
+          <div class="mt-5 rounded-[var(--radius-panel)] border border-apple-line bg-white p-4">
+            <div class="flex items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-medium text-apple-gray">余额使用进度</p>
+                <p class="mt-1 text-sm text-[#515154]">已消费 {{ storeCreditSpentRatio.toFixed(1) }}%，剩余 {{ formatSummaryMoney(summary.storeCreditBalance) }}</p>
+              </div>
+              <AppleDataBadge tone="blue">{{ formatSummaryMoney(summary.storeCreditSpend) }} / {{ formatSummaryMoney(summary.storeCreditRecharge) }}</AppleDataBadge>
+            </div>
+            <div class="mt-4 h-3 overflow-hidden rounded-full bg-apple-bg">
+              <div class="h-full rounded-full bg-apple-blue transition-all duration-500" :style="{ width: `${storeCreditSpentRatio}%` }" />
+            </div>
           </div>
         </AppleCard>
       </div>
@@ -190,18 +257,21 @@ const paymentOption = computed<EChartsOption>(() => ({
         </AppleCard>
 
         <AppleCard>
-          <AppleSectionTitle title="最近消费" />
+          <AppleSectionTitle title="最近消费">
+            <AppleSegmentedControl v-model="recentSpendFilter" :options="recentSpendOptions" />
+          </AppleSectionTitle>
           <div class="divide-y divide-apple-line">
-            <div v-for="item in summary.recentTransactions" :key="item.id" class="flex items-center justify-between gap-4 py-3">
+            <div v-for="item in recentTransactions" :key="item.id" class="flex items-center justify-between gap-4 py-3">
               <div class="min-w-0">
                 <p class="truncate font-medium">{{ item.title }}</p>
                 <p class="mt-1 text-sm text-apple-gray">{{ item.date }} · {{ item.paymentMethod || 'Unknown' }}</p>
               </div>
-              <AppleDataBadge :tone="item.cashImpact ? 'green' : item.isFree ? 'default' : 'orange'">
-                {{ item.cashImpact ? '现金' : item.isFree ? '免费' : '非现金' }}
+              <AppleDataBadge :tone="paymentBadge(item).tone">
+                {{ paymentBadge(item).label }}
               </AppleDataBadge>
             </div>
           </div>
+          <p v-if="!recentTransactions.length" class="py-3 text-sm text-apple-gray">当前筛选下没有匹配的最近消费记录。</p>
         </AppleCard>
       </div>
 

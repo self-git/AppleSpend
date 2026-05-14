@@ -15,7 +15,7 @@ import { toCsv } from '@/lib/csv'
 import { formatMoney, parseMoney } from '@/lib/money'
 import { resolveTransactionImage } from '@/features/media-assets/image-resolver'
 
-type CashFilter = 'all' | 'cash' | 'non_cash'
+type SpendFilter = 'all' | 'paid' | 'free'
 
 const store = useTransactionStore()
 const keyword = ref('')
@@ -23,15 +23,15 @@ const selectedYear = ref('')
 const selectedCategory = ref('')
 const selectedSource = ref('')
 const selectedPayment = ref('')
-const cashFilter = ref<CashFilter>('all')
+const spendFilter = ref<SpendFilter>('all')
 const selectedTransaction = ref<AppleTransaction>()
 const drawerVisible = ref(false)
 
-const cashOptions = [
+const spendOptions = [
   { label: '全部', value: 'all' },
-  { label: '计入现金', value: 'cash' },
-  { label: '非现金 / 免费', value: 'non_cash' },
-] satisfies Array<{ label: string; value: CashFilter }>
+  { label: '付费', value: 'paid' },
+  { label: '免费', value: 'free' },
+] satisfies Array<{ label: string; value: SpendFilter }>
 
 const filteredTransactions = computed(() => {
   const query = keyword.value.trim().toLowerCase()
@@ -41,8 +41,8 @@ const filteredTransactions = computed(() => {
     if (selectedCategory.value && item.category !== selectedCategory.value) return false
     if (selectedSource.value && item.source !== selectedSource.value) return false
     if (selectedPayment.value && item.paymentMethod !== selectedPayment.value) return false
-    if (cashFilter.value === 'cash' && !item.cashImpact) return false
-    if (cashFilter.value === 'non_cash' && item.cashImpact) return false
+    if (spendFilter.value === 'paid' && !isPaidTransaction(item)) return false
+    if (spendFilter.value === 'free' && !item.isFree) return false
     return true
   })
 })
@@ -65,6 +65,25 @@ function openDetail(transaction: AppleTransaction) {
 
 function sortAmount(a: AppleTransaction, b: AppleTransaction) {
   return parseMoney(a.amount).cmp(parseMoney(b.amount))
+}
+
+function isStoreCreditPayment(paymentMethod?: string): boolean {
+  return String(paymentMethod ?? '').toUpperCase().includes('STORE CREDIT')
+}
+
+function isPaidTransaction(transaction: AppleTransaction): boolean {
+  if (transaction.cashImpact) return true
+  if (transaction.isFree) return false
+  return isStoreCreditPayment(transaction.paymentMethod)
+}
+
+function amountBadge(transaction: AppleTransaction) {
+  if (transaction.isFree) return { tone: 'default' as const, label: '免费' }
+  if (transaction.cashImpact) return { tone: 'green' as const, label: formatMoney(transaction.amount, transaction.currency) }
+  if (isStoreCreditPayment(transaction.paymentMethod)) {
+    return { tone: 'orange' as const, label: formatMoney(transaction.amount, transaction.currency) }
+  }
+  return { tone: 'orange' as const, label: formatMoney(transaction.amount, transaction.currency) }
 }
 
 function exportCsv() {
@@ -129,7 +148,7 @@ function exportCsv() {
           </el-select>
         </div>
         <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <AppleSegmentedControl v-model="cashFilter" :options="cashOptions" />
+          <AppleSegmentedControl v-model="spendFilter" :options="spendOptions" />
           <p class="text-sm text-apple-gray">当前 {{ filteredTransactions.length }} 条 / 全部 {{ store.transactions.length }} 条</p>
         </div>
       </AppleCard>
@@ -142,7 +161,7 @@ function exportCsv() {
             </template>
           </el-table-column>
           <el-table-column prop="date" label="日期" width="118" sortable />
-          <el-table-column label="名称" min-width="320">
+          <el-table-column label="名称" min-width="280">
             <template #default="{ row }">
               <div>
                 <p class="font-semibold text-apple-black">{{ row.title }}</p>
@@ -150,21 +169,16 @@ function exportCsv() {
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="category" label="类别" width="150" />
-          <el-table-column prop="paymentMethod" label="支付方式" width="160" />
-          <el-table-column label="口径" width="180">
+          <el-table-column prop="category" label="类别" width="130" />
+          <el-table-column prop="paymentMethod" label="支付方式" width="120" />
+          <el-table-column label="金额" width="210" sortable :sort-method="sortAmount">
             <template #default="{ row }">
-              <div class="flex flex-wrap gap-1.5">
-                <AppleDataBadge :tone="row.cashImpact ? 'green' : row.isFree ? 'default' : 'orange'">
-                  {{ row.cashImpact ? '现金' : row.isFree ? '免费' : '非现金' }}
+              <div class="flex items-center gap-1.5 whitespace-nowrap">
+                <AppleDataBadge :tone="amountBadge(row).tone">
+                  {{ amountBadge(row).label }}
                 </AppleDataBadge>
                 <AppleDataBadge v-if="row.isRefund" tone="red">退款</AppleDataBadge>
               </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="金额" align="right" width="150" sortable :sort-method="sortAmount">
-            <template #default="{ row }">
-              <span class="font-semibold">{{ formatMoney(row.amount, row.currency) }}</span>
             </template>
           </el-table-column>
         </el-table>
@@ -190,9 +204,10 @@ function exportCsv() {
           </div>
           <div class="mt-3 flex flex-wrap gap-2">
             <AppleDataBadge>{{ item.category }}</AppleDataBadge>
-            <AppleDataBadge :tone="item.cashImpact ? 'green' : item.isFree ? 'default' : 'orange'">
-              {{ item.cashImpact ? '现金' : item.isFree ? '免费' : '非现金' }}
+            <AppleDataBadge :tone="amountBadge(item).tone">
+              {{ amountBadge(item).label }}
             </AppleDataBadge>
+            <AppleDataBadge v-if="item.isRefund" tone="red">退款</AppleDataBadge>
           </div>
         </button>
       </div>

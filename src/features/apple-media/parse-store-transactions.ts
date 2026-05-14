@@ -17,7 +17,9 @@ export function parseStoreTransactions(rows: CsvRow[], filePath: string): MediaP
   let skippedCount = 0
 
   rows.forEach((row, index) => {
-    const title = String(row['Item Description'] ?? '').trim()
+    const contentType = String(row['Content Type'] ?? '').trim()
+    const containerDescription = String(row['Container Description'] ?? '').trim()
+    const title = resolveMediaTitle(row, contentType, containerDescription)
     const date = normalizeDate(row['Item Purchased Date'])
     if (!title || !date) {
       skippedCount += 1
@@ -25,7 +27,6 @@ export function parseStoreTransactions(rows: CsvRow[], filePath: string): MediaP
       return
     }
 
-    const contentType = String(row['Content Type'] ?? '').trim()
     const paymentMethod = normalizePaymentType(row['Payment Type'])
     const invoiceTotal = parseMoney(row['Invoice Item Total'])
     const refund = parseMoney(row['Refund Amount'])
@@ -38,7 +39,7 @@ export function parseStoreTransactions(rows: CsvRow[], filePath: string): MediaP
       source: category === 'Subscription' ? 'subscription' : category === 'Store Credit' ? 'store_credit' : 'app_store',
       date,
       title,
-      subtitle: row['Container Description'] || undefined,
+      subtitle: containerDescription || undefined,
       category,
       amount: netAmount.toFixed(2),
       currency: row.Currency || 'CNY',
@@ -57,4 +58,13 @@ export function parseStoreTransactions(rows: CsvRow[], filePath: string): MediaP
   })
 
   return { transactions, skippedCount, warnings }
+}
+
+function resolveMediaTitle(row: CsvRow, contentType: string, containerDescription: string): string {
+  const itemDescription = String(row['Item Description'] ?? '').trim()
+  if (itemDescription) return itemDescription
+  if (containerDescription) return containerDescription
+  if (contentType === 'Gift Certificates') return 'Apple 账户余额充值'
+  if (contentType) return contentType
+  return ''
 }

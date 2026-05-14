@@ -10,6 +10,7 @@ export interface DashboardSummary {
   softwareSpend: Decimal
   storeCreditSpend: Decimal
   storeCreditRecharge: Decimal
+  storeCreditBalance: Decimal
   freeCount: number
   years: string[]
   byYear: Array<{ year: string; cash: Decimal; bill: Decimal; hardware: Decimal; software: Decimal }>
@@ -27,6 +28,8 @@ export function calculateSummary(transactions: AppleTransaction[], assets: Apple
   const softwareTransactions = cashTransactions.filter((item) => item.source !== 'apple_store')
   const storeCreditTransactions = transactions.filter((item) => item.paymentMethod?.toUpperCase().includes('STORE CREDIT'))
   const storeCreditRecharge = transactions.filter((item) => item.category === 'Store Credit' && item.cashImpact)
+  const storeCreditRechargeTotal = sumTransactions(storeCreditRecharge)
+  const storeCreditSpendTotal = sumTransactions(storeCreditTransactions)
 
   const years = Array.from(new Set(transactions.map((item) => getYear(item.date)))).filter((year) => year !== '未知').sort()
   const byYear = years.map((year) => {
@@ -46,8 +49,9 @@ export function calculateSummary(transactions: AppleTransaction[], assets: Apple
     billValue: sumTransactions(billTransactions),
     hardwareSpend: sumTransactions(hardwareTransactions),
     softwareSpend: sumTransactions(softwareTransactions),
-    storeCreditSpend: sumTransactions(storeCreditTransactions),
-    storeCreditRecharge: sumTransactions(storeCreditRecharge),
+    storeCreditSpend: storeCreditSpendTotal,
+    storeCreditRecharge: storeCreditRechargeTotal,
+    storeCreditBalance: storeCreditRechargeTotal.minus(storeCreditSpendTotal),
     freeCount: transactions.filter((item) => item.isFree).length,
     years,
     byYear,

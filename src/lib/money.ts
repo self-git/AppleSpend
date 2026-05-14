@@ -18,7 +18,8 @@ export function multiplyMoney(value: string | number | null | undefined, qty: st
 export function formatMoney(value: Decimal.Value, currency = 'CNY'): string {
   const decimal = new Decimal(value)
   const sign = decimal.isNegative() ? '-' : ''
-  const symbol = currency.toUpperCase() === 'CNY' || currency === '人民币' ? '¥' : `${currency} `
+  const normalizedCurrency = currency.toUpperCase()
+  const symbol = normalizedCurrency === 'CNY' || normalizedCurrency === 'RMB' || currency === '人民币' ? '¥' : `${currency} `
   const [integer = '0', fraction = '00'] = decimal.abs().toFixed(2).split('.')
   const grouped = integer.replace(/\B(?=(\d{3})+(?!\d))/g, ',')
   return `${sign}${symbol}${grouped}.${fraction}`
