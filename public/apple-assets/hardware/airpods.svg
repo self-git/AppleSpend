@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="AirPods placeholder">
+  <rect width="220" height="220" rx="44" fill="#f5f5f7"/>
+  <rect x="66" y="48" width="34" height="88" rx="17" fill="#fbfbfd" stroke="#d2d2d7" stroke-width="4"/>
+  <rect x="120" y="48" width="34" height="88" rx="17" fill="#fbfbfd" stroke="#d2d2d7" stroke-width="4"/>
+  <rect x="75" y="120" width="16" height="52" rx="8" fill="#fbfbfd" stroke="#d2d2d7" stroke-width="4"/>
+  <rect x="129" y="120" width="16" height="52" rx="8" fill="#fbfbfd" stroke="#d2d2d7" stroke-width="4"/>
+</svg>

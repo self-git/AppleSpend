@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="Subscription placeholder">
+  <rect width="220" height="220" rx="44" fill="#f5f5f7"/>
+  <circle cx="110" cy="110" r="58" fill="#fbfbfd" stroke="#1d1d1f" stroke-width="8"/>
+  <path d="M110 70v42l30 18" stroke="#0071e3" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

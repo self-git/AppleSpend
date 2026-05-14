@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 220" role="img" aria-label="Mac placeholder">
+  <rect width="260" height="220" rx="44" fill="#f5f5f7"/>
+  <rect x="42" y="42" width="176" height="110" rx="10" fill="#1d1d1f"/>
+  <rect x="52" y="52" width="156" height="88" rx="4" fill="#fbfbfd"/>
+  <path d="M32 164h196l-14 18H46z" fill="#d2d2d7"/>
+  <path d="M99 164h62l-4 6h-54z" fill="#86868b"/>
+</svg>
