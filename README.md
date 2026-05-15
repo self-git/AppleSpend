@@ -153,7 +153,6 @@ pnpm typecheck
 
 ## 仓库说明
 
-- 规划文档：[`docs/plans/Apple消费账本实现计划.md`](docs/plans/Apple消费账本实现计划.md)
 - 入口文件：[`src/main.ts`](src/main.ts)
 - 路由配置：[`src/app/router.ts`](src/app/router.ts)
 
