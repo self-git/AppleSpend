@@ -156,5 +156,6 @@ pnpm typecheck
 - 入口文件：[`src/main.ts`](src/main.ts)
 - 路由配置：[`src/app/router.ts`](src/app/router.ts)
 - 主分支启用了保护规则，协作提交请通过 Pull Request 并使用已验证签名
+- 本仓库推荐使用 `pnpm` 安装依赖和运行本地脚本
 
 如果你也在整理自己的 Apple 消费历史，希望这个项目能帮你把“买过什么、花了多少、哪些还在用”这三件事讲清楚。
