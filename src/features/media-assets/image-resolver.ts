@@ -1,5 +1,6 @@
 import type { AppleAsset, AppleTransaction } from '@/features/transactions/transaction-model'
 import type { AppleVisualAsset } from './asset-image-model'
+import { resolvePreciseAppleHardwareImage } from './apple-hardware-catalog'
 import { visualAssets } from './image-manifest'
 
 const fallback = visualAssets.find((item) => item.id === 'placeholder-default')!
@@ -23,6 +24,10 @@ export function resolveTransactionImage(transaction: AppleTransaction): AppleVis
     text: `${transaction.category} ${transaction.title} ${transaction.subtitle ?? ''} ${transaction.rawType ?? ''}`,
     preferredKind: transaction.source === 'apple_store' ? 'hardware' : 'software',
   })
+}
+
+export function resolveTransactionHeroImage(transaction: AppleTransaction): AppleVisualAsset {
+  return resolvePreciseAppleHardwareImage(transaction)?.asset ?? resolveTransactionImage(transaction)
 }
 
 export function resolveAssetImage(asset: AppleAsset): AppleVisualAsset {

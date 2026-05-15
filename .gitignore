@@ -1,9 +1,11 @@
 .DS_Store
-docs/
 node_modules/
 dist/
 logs/
 .idea/
 .vscode/
+.specstory/
+.specstory/**
+
 
 .logs/

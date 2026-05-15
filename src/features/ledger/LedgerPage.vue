@@ -13,7 +13,7 @@ import type { AppleTransaction } from '@/features/transactions/transaction-model
 import { useTransactionStore } from '@/features/transactions/transaction-store'
 import { toCsv } from '@/lib/csv'
 import { formatMoney, parseMoney } from '@/lib/money'
-import { resolveTransactionImage } from '@/features/media-assets/image-resolver'
+import { resolveTransactionHeroImage, resolveTransactionImage } from '@/features/media-assets/image-resolver'
 
 type SpendFilter = 'all' | 'paid' | 'free'
 
@@ -220,7 +220,7 @@ function exportCsv() {
     <el-drawer v-model="drawerVisible" size="min(560px, 92vw)" title="交易详情">
       <div v-if="selectedTransaction" class="space-y-6">
         <AppleImageHero
-          :asset="resolveTransactionImage(selectedTransaction)"
+          :asset="resolveTransactionHeroImage(selectedTransaction)"
           :title="selectedTransaction.title"
           :subtitle="`${selectedTransaction.date} · ${sourceLabel(selectedTransaction.source)}`"
         />

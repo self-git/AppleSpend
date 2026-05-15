@@ -214,17 +214,14 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
             <div class="rounded-[var(--radius-panel)] bg-apple-bg p-4">
               <p class="text-sm text-apple-gray">累计充值</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatSummaryMoney(summary.storeCreditRecharge) }}</p>
-              <p class="mt-2 text-sm text-[#515154]">外部渠道充入 Apple 账户。</p>
             </div>
             <div class="rounded-[var(--radius-panel)] bg-apple-bg p-4">
               <p class="text-sm text-apple-gray">已消费</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatSummaryMoney(summary.storeCreditSpend) }}</p>
-              <p class="mt-2 text-sm text-[#515154]">账户余额已用金额。</p>
             </div>
             <div class="rounded-[var(--radius-panel)] bg-apple-bg p-4">
               <p class="text-sm text-apple-gray">当前余额</p>
               <p class="mt-2 text-3xl font-semibold">{{ formatSummaryMoney(summary.storeCreditBalance) }}</p>
-              <p class="mt-2 text-sm text-[#515154]">按导入记录估算剩余。</p>
             </div>
           </div>
           <div class="mt-5 rounded-[var(--radius-panel)] border border-apple-line bg-white p-4">
