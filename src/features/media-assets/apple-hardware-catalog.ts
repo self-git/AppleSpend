@@ -164,8 +164,27 @@ function parseProductLine(text: string): HardwareProductLine | undefined {
   if (containsPhrase(text, 'AIRPODS')) return 'AirPods'
   if (containsPhrase(text, 'WATCH')) return 'Apple Watch'
   if (containsPhrase(text, 'APPLECARE') || containsPhrase(text, 'AC+')) return 'AppleCare'
-  if (containsAnyPhrase(text, ['MACBOOK', 'MAC', 'MBA', 'MBP'])) return 'Mac'
-  if (containsAnyPhrase(text, ['ADAPTER', 'CABLE', 'CASE', 'MAGSAFE', 'PENCIL', 'KEYBOARD', 'MOUSE', 'TRACKPAD'])) return 'Accessory'
+  if (containsAnyPhrase(text, ['MACBOOK', 'MAC', 'MBA', 'MBP', 'IMAC', 'MAC MINI', 'MAC STUDIO', 'STUDIO DISPLAY'])) {
+    return 'Mac'
+  }
+  if (
+    containsAnyPhrase(text, [
+      'ADAPTER',
+      'CABLE',
+      'CASE',
+      'MAGSAFE',
+      'PENCIL',
+      'KEYBOARD',
+      'MOUSE',
+      'TRACKPAD',
+      'REMOTE',
+      'HOMEPOD',
+      'SPEAKER',
+      'AIRTAG',
+    ])
+  ) {
+    return 'Accessory'
+  }
   return undefined
 }
 

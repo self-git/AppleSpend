@@ -63,16 +63,28 @@ function resolveByText(input: {
   }
 
   const normalizedText = input.text.toUpperCase()
-  const directCategory = visualAssets.find((item) => item.category === input.category && item.kind === input.preferredKind)
-  if (directCategory) return directCategory
+  const keywordMatch = visualAssets
+    .filter((item) => item.kind === input.preferredKind && item.matchKeywords.length > 0)
+    .map((item) => {
+      const matches = item.matchKeywords.filter((keyword) => normalizedText.includes(keyword.toUpperCase()))
+      if (matches.length === 0) return undefined
 
-  const keywordMatch = visualAssets.find(
-    (item) =>
-      item.kind === input.preferredKind &&
-      item.matchKeywords.length > 0 &&
-      item.matchKeywords.some((keyword) => normalizedText.includes(keyword.toUpperCase())),
-  )
+      return {
+        item,
+        specificity: Math.max(...matches.map((keyword) => keyword.length)),
+      }
+    })
+    .filter((item): item is { item: AppleVisualAsset; specificity: number } => Boolean(item))
+    .sort((left, right) => right.specificity - left.specificity)[0]?.item
   if (keywordMatch) return keywordMatch
+
+  const directCategory = visualAssets.find(
+    (item) =>
+      item.category === input.category &&
+      item.kind === input.preferredKind &&
+      item.id.endsWith('-default'),
+  )
+  if (directCategory) return directCategory
 
   const kindDefault = visualAssets.find((item) => item.kind === input.preferredKind)
   return kindDefault ?? fallback

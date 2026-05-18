@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="Apple Pencil icon">
+  <rect width="220" height="220" rx="44" fill="#f5f5f7"/>
+  <g fill="none" stroke="#1d1d1f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M71 148 143 76"/>
+    <path d="M143 76 160 59"/>
+    <path d="M62 157 71 148"/>
+    <path d="M58 172 74 168 62 157z" fill="#f5f5f7"/>
+  </g>
+</svg>

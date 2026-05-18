@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 220" role="img" aria-label="Accessory icon">
+  <rect width="220" height="220" rx="44" fill="#f5f5f7"/>
+  <g fill="none" stroke="#1d1d1f" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M84 55h28"/>
+    <path d="M98 55v54"/>
+    <path d="M78 109h40"/>
+    <path d="M70 109c0 29-18 39-18 53 0 10 8 18 18 18h5"/>
+    <path d="M126 109c0 29 18 39 18 53 0 10-8 18-18 18h-5"/>
+    <path d="M75 180h70"/>
+    <path d="M145 176h18"/>
+  </g>
+</svg>
