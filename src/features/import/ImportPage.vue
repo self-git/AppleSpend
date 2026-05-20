@@ -26,7 +26,10 @@ const importModeOptions = [
 ] satisfies Array<{ label: string; value: ImportMode }>
 
 function setFiles(fileList: FileList | null) {
-  selectedFiles.value = Array.from(fileList ?? []).filter((file) => file.name.toLowerCase().endsWith('.csv'))
+  selectedFiles.value = Array.from(fileList ?? []).filter((file) => {
+    const lower = file.name.toLowerCase()
+    return lower.endsWith('.csv') || lower.endsWith('.zip')
+  })
 }
 
 function onDrop(event: DragEvent) {
@@ -53,10 +56,10 @@ async function importFiles() {
         insertedCount: file.parsedCount,
         duplicateCount: 0,
       }))
-      await store.replaceAll(result.transactions, result.assets, result.batch)
-      ElMessage.success(`替换完成：${result.transactions.length} 条交易，${result.assets.length} 个资产。`)
+      await store.replaceAll(result)
+      ElMessage.success(`替换完成：${result.transactions.length} 条交易，${result.assets.length} 个资产，${result.subscriptions.length} 个订阅。`)
     } else {
-      const summary = await store.appendImport(result.transactions, result.assets, result.batch, { fileBuckets: result.fileBuckets })
+      const summary = await store.appendImport(result, { fileBuckets: result.fileBuckets })
       ElMessage.success(
         `增量导入完成：新增 ${summary.insertedTransactions} 条交易、${summary.insertedAssets} 个资产，跳过重复 ${summary.duplicateTransactions + summary.duplicateAssets} 条。`,
       )
@@ -88,7 +91,7 @@ async function clearData() {
     <ApplePageHeader
       eyebrow="本地优先"
       title="导入 Apple 数据与隐私导出的 CSV"
-      description="V1 支持 App Store 购买记录和 Apple Store 硬件订单。文件只在浏览器本地解析，并保存到 IndexedDB。"
+      description="V2 支持单 CSV、多 CSV 和 Apple 数据导出 ZIP。所有文件只在浏览器本地解析，并保存到 IndexedDB。"
     >
       <template #actions>
         <AppleButton variant="danger" :disabled="!store.hasData" @click="clearData">清空本地数据</AppleButton>
@@ -106,10 +109,14 @@ async function clearData() {
           <p class="mt-2 text-3xl font-semibold">{{ store.assets.length }}</p>
         </AppleCard>
         <AppleCard tone="quiet">
+          <p class="text-sm text-apple-gray">订阅</p>
+          <p class="mt-2 text-3xl font-semibold">{{ store.subscriptions.length }}</p>
+        </AppleCard>
+        <AppleCard tone="quiet">
           <p class="text-sm text-apple-gray">导入批次</p>
           <p class="mt-2 text-3xl font-semibold">{{ store.batches.length }}</p>
         </AppleCard>
-        <AppleCard tone="quiet">
+        <AppleCard tone="quiet" class="md:col-span-2">
           <p class="text-sm text-apple-gray">最近导入</p>
           <p class="mt-3 text-sm font-semibold leading-5">{{ lastImportedAt }}</p>
         </AppleCard>
@@ -119,7 +126,7 @@ async function clearData() {
         <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <p class="text-lg font-semibold">导入方式</p>
-            <p class="mt-1 text-sm text-apple-gray">默认增量导入，适合软件和硬件 CSV 分开上传。</p>
+            <p class="mt-1 text-sm text-apple-gray">默认增量导入，支持单个 CSV、多个 CSV 或 ZIP 批量导入。</p>
           </div>
           <AppleSegmentedControl v-model="importMode" :options="importModeOptions" />
         </div>
@@ -131,13 +138,13 @@ async function clearData() {
           @dragleave.prevent="isDragging = false"
           @drop.prevent="onDrop"
         >
-          <p class="text-2xl font-semibold">拖入 CSV 文件</p>
+          <p class="text-2xl font-semibold">拖入 CSV 或 ZIP 文件</p>
           <p class="mt-3 max-w-xl text-sm leading-6 text-apple-gray">
-            支持 `Store Transaction Purchase and Free Apps History.csv` 与 `Online Purchase History.csv`。也可以一次选择两个文件。
+            支持 App Store、Apple Store、订阅历史、Apple 账户余额、AppleCare、设备信息，以及 Apple 数据导出 ZIP。
           </p>
           <label class="focus-ring mt-6 inline-flex cursor-pointer rounded-md bg-apple-blue px-5 py-3 text-sm font-semibold text-white hover:bg-[#0077ed]">
             选择文件
-            <input class="hidden" type="file" accept=".csv,text/csv" multiple @change="setFiles(($event.target as HTMLInputElement).files)" />
+            <input class="hidden" type="file" accept=".csv,text/csv,.zip,application/zip" multiple @change="setFiles(($event.target as HTMLInputElement).files)" />
           </label>
         </div>
 
@@ -156,11 +163,13 @@ async function clearData() {
       </AppleCard>
 
       <AppleCard>
-        <AppleSectionTitle title="解析规则" description="V1 已内置核心清洗口径。" />
+        <AppleSectionTitle title="解析规则" description="V2 已扩展到多文件和 ZIP 导入。" />
         <div class="space-y-4 text-sm leading-6 text-[#515154]">
-          <p>Store Credit 消费不会重复计入实际现金支出，但会进入账单项目价值。</p>
+          <p>余额消费不会重复计入实际现金支出，但会进入账单项目价值。</p>
+          <p>订阅历史只补足事件和状态，不直接新增现金支出。</p>
+          <p>Apple Pay / Billing 数据默认只作为核对凭证，不直接进入总支出。</p>
           <p>Invoice Item Total 为 0 的项目会标记为免费 / 限免，默认不计入支出。</p>
-          <p>硬件订单会跳过空白汇总行，并按订单号、行号、描述、含税价格去重。</p>
+          <p>ZIP 中未识别的 CSV 不会中断整个导入，会进入导入摘要和数据质量提示。</p>
           <p>所有金额聚合使用 decimal.js，避免浮点累计误差。</p>
         </div>
       </AppleCard>
@@ -174,10 +183,12 @@ async function clearData() {
                 <p class="font-semibold">{{ file.path }}</p>
                 <p class="mt-1 text-sm text-apple-gray">{{ file.type }}</p>
               </div>
-              <AppleDataBadge tone="blue">{{ file.insertedCount ?? file.parsedCount }} 条新增</AppleDataBadge>
+              <AppleDataBadge :tone="file.status === 'unknown' ? 'orange' : file.status === 'warning' ? 'orange' : 'blue'">
+                {{ file.insertedCount ?? file.parsedCount }} 条新增
+              </AppleDataBadge>
             </div>
             <p class="mt-3 text-sm text-[#515154]">
-              总行数 {{ file.rowCount }}，解析 {{ file.parsedCount }}，跳过 {{ file.skippedCount }}，重复 {{ file.duplicateCount ?? 0 }}。
+              总行数 {{ file.rowCount }}，解析 {{ file.parsedCount }}，跳过 {{ file.skippedCount }}，重复 {{ file.duplicateCount ?? 0 }}，警告 {{ file.warningCount ?? 0 }}。
             </p>
           </div>
         </div>

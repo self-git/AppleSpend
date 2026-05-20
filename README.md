@@ -85,7 +85,13 @@ pnpm dev
 默认会启动在本地地址：
 
 ```bash
-http://127.0.0.1:5173
+http://127.0.0.1:5180
+```
+
+开发环境已接入 `@xiaou66/vite-plugin-vue-mcp-next`。启动后可通过下面的 Streamable HTTP 地址连接项目级 MCP：
+
+```bash
+http://127.0.0.1:5180/__mcp/mcp
 ```
 
 ### 3. 构建生产版本

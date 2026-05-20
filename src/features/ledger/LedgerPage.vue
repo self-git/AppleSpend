@@ -14,6 +14,7 @@ import { useTransactionStore } from '@/features/transactions/transaction-store'
 import { toCsv } from '@/lib/csv'
 import { formatMoney, parseMoney } from '@/lib/money'
 import { resolveTransactionHeroImage, resolveTransactionImage } from '@/features/media-assets/image-resolver'
+import { categoryLabel, paymentMethodLabel, sourceLabel } from '@/features/transactions/transaction-labels'
 
 type SpendFilter = 'all' | 'paid' | 'free'
 
@@ -46,17 +47,6 @@ const filteredTransactions = computed(() => {
     return true
   })
 })
-
-function sourceLabel(source: string): string {
-  const labels: Record<string, string> = {
-    apple_store: 'Apple Store',
-    app_store: 'App Store',
-    subscription: '订阅',
-    store_credit: 'Store Credit',
-    applecare: 'AppleCare',
-  }
-  return labels[source] ?? source
-}
 
 function openDetail(transaction: AppleTransaction) {
   selectedTransaction.value = transaction
@@ -95,12 +85,12 @@ function exportCsv() {
     filteredTransactions.value.map((item) => ({
       date: item.date,
       source: sourceLabel(item.source),
-      category: item.category,
+      category: categoryLabel(item.category),
       title: item.title,
       subtitle: item.subtitle ?? '',
       amount: item.amount,
       currency: item.currency,
-      paymentMethod: item.paymentMethod ?? '',
+      paymentMethod: paymentMethodLabel(item.paymentMethod),
       orderNumber: item.orderNumber ?? '',
       cashImpact: String(item.cashImpact),
       billValueImpact: String(item.billValueImpact),
@@ -138,13 +128,13 @@ function exportCsv() {
             <el-option v-for="year in store.years" :key="year" :label="year" :value="year" />
           </el-select>
           <el-select v-model="selectedCategory" clearable placeholder="类别">
-            <el-option v-for="category in store.categories" :key="category" :label="category" :value="category" />
+            <el-option v-for="category in store.categories" :key="category" :label="categoryLabel(category)" :value="category" />
           </el-select>
           <el-select v-model="selectedSource" clearable placeholder="来源">
             <el-option v-for="source in store.sources" :key="source" :label="sourceLabel(source)" :value="source" />
           </el-select>
           <el-select v-model="selectedPayment" clearable placeholder="支付方式">
-            <el-option v-for="method in store.paymentMethods" :key="method" :label="method" :value="method" />
+            <el-option v-for="method in store.paymentMethods" :key="method" :label="paymentMethodLabel(method)" :value="method" />
           </el-select>
         </div>
         <div class="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -169,8 +159,16 @@ function exportCsv() {
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="category" label="类别" width="130" />
-          <el-table-column prop="paymentMethod" label="支付方式" width="120" />
+          <el-table-column label="类别" width="150">
+            <template #default="{ row }">
+              {{ categoryLabel(row.category) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="支付方式" width="120">
+            <template #default="{ row }">
+              {{ paymentMethodLabel(row.paymentMethod) }}
+            </template>
+          </el-table-column>
           <el-table-column label="金额" width="210" sortable :sort-method="sortAmount">
             <template #default="{ row }">
               <div class="flex items-center gap-1.5 whitespace-nowrap">
@@ -203,7 +201,7 @@ function exportCsv() {
             <span class="shrink-0 font-semibold">{{ formatMoney(item.amount, item.currency) }}</span>
           </div>
           <div class="mt-3 flex flex-wrap gap-2">
-            <AppleDataBadge>{{ item.category }}</AppleDataBadge>
+            <AppleDataBadge>{{ categoryLabel(item.category) }}</AppleDataBadge>
             <AppleDataBadge :tone="amountBadge(item).tone">
               {{ amountBadge(item).label }}
             </AppleDataBadge>
@@ -231,7 +229,7 @@ function exportCsv() {
           </div>
           <div class="rounded-md bg-apple-bg p-4">
             <p class="text-sm text-apple-gray">支付方式</p>
-            <p class="mt-1 text-xl font-semibold">{{ selectedTransaction.paymentMethod || 'Unknown' }}</p>
+            <p class="mt-1 text-xl font-semibold">{{ paymentMethodLabel(selectedTransaction.paymentMethod) }}</p>
           </div>
         </div>
         <div>

@@ -7,5 +7,5 @@ logs/
 .specstory/
 .specstory/**
 
-
 .logs/
+.vite-mcp/

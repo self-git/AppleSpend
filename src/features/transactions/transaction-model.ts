@@ -43,7 +43,7 @@ export interface AppleAsset {
   currency: string
   orderNumber: string
   sourceTransactionId: string
-  status: 'using' | 'sold' | 'retired' | 'gifted' | 'unknown'
+  status: 'using' | 'sold' | 'retired' | 'gifted' | 'lost' | 'unknown'
   imageId?: string
   imageUrl?: string
   thumbnailUrl?: string
@@ -67,6 +67,8 @@ export interface ImportedFileSummary {
   skippedCount: number
   duplicateCount?: number
   insertedCount?: number
+  status?: 'success' | 'warning' | 'unknown' | 'conflict'
+  warningCount?: number
 }
 
 export interface ImportWarning {
@@ -74,4 +76,148 @@ export interface ImportWarning {
   message: string
   filePath?: string
   rowNumber?: number
+}
+
+export interface AppleRawRef {
+  source: string
+  filePath?: string
+  recordId?: string
+  type?: string
+}
+
+export interface AppleSubscription {
+  id: string
+  serviceName: string
+  appName?: string
+  productName?: string
+  firstSeenDate?: string
+  latestEventDate?: string
+  status: 'active' | 'expired' | 'cancelled' | 'unknown'
+  billingPeriod?: 'weekly' | 'monthly' | 'yearly' | 'one_time' | 'unknown'
+  latestAmount?: string
+  currency?: string
+  sourceTransactionIds: string[]
+  eventIds: string[]
+  rawRefs: AppleRawRef[]
+}
+
+export interface AppleSubscriptionEvent {
+  id: string
+  subscriptionId: string
+  date: string
+  eventType: 'start' | 'renewal' | 'trial' | 'cancel' | 'expire' | 'refund' | 'unknown'
+  amount?: string
+  currency?: string
+  orderNumber?: string
+  raw: Record<string, string>
+}
+
+export interface StoreCreditEntry {
+  id: string
+  date: string
+  direction: 'recharge' | 'spend' | 'refund' | 'adjustment' | 'unknown'
+  amount: string
+  currency: string
+  source: 'media_transactions' | 'store_credit_history' | 'manual'
+  relatedTransactionId?: string
+  orderNumber?: string
+  balanceAfter?: string
+  raw: Record<string, string>
+}
+
+export interface AppleDeviceLifecycle {
+  assetId: string
+  deviceName?: string
+  serialNumber?: string
+  modelIdentifier?: string
+  appleCareStatus?: 'covered' | 'expired' | 'none' | 'unknown'
+  firstSeenDate?: string
+  lastSeenDate?: string
+  soldDate?: string
+  soldPrice?: string
+  status: 'using' | 'sold' | 'retired' | 'gifted' | 'lost' | 'unknown'
+  isPrimaryDevice?: boolean
+  repairEventIds: string[]
+  supportCaseIds: string[]
+  note?: string
+}
+
+export interface AppleCareRepairEvent {
+  id: string
+  date?: string
+  deviceHint?: string
+  issue?: string
+  repairStatus?: string
+  cost?: string
+  currency?: string
+  relatedAssetId?: string
+  raw: Record<string, string>
+}
+
+export interface AppleSupportCase {
+  id: string
+  openedDate?: string
+  closedDate?: string
+  deviceHint?: string
+  caseNumber?: string
+  status?: string
+  issue?: string
+  relatedAssetId?: string
+  raw: Record<string, string>
+}
+
+export interface AppleDeviceAppearance {
+  id: string
+  deviceName?: string
+  modelIdentifier?: string
+  serialNumber?: string
+  platform?: string
+  osVersion?: string
+  firstSeenDate?: string
+  lastSeenDate?: string
+  relatedAssetId?: string
+  raw: Record<string, string>
+}
+
+export interface PaymentEvidence {
+  id: string
+  date: string
+  amount: string
+  currency: string
+  paymentMethod?: string
+  orderNumber?: string
+  relatedTransactionIds: string[]
+  raw: Record<string, string>
+}
+
+export interface DataQualityIssue {
+  id: string
+  severity: 'info' | 'warning' | 'error'
+  type:
+    | 'duplicate_candidate'
+    | 'missing_required_field'
+    | 'unclassified_item'
+    | 'ambiguous_file_type'
+    | 'unlinked_store_credit'
+    | 'unlinked_device_event'
+    | 'amount_mismatch'
+    | 'subscription_status_unknown'
+    | 'orphan_device_appearance'
+  title: string
+  description: string
+  entityType?: string
+  entityIds?: string[]
+  suggestedAction?: string
+  dismissed?: boolean
+}
+
+export interface RuleSetting {
+  id: string
+  type: 'category' | 'cash_flow' | 'store_credit' | 'exclude' | 'subscription_alias' | 'device_alias'
+  name: string
+  enabled: boolean
+  matcher: string
+  value: string
+  note?: string
+  updatedAt: string
 }

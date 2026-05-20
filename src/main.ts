@@ -7,4 +7,11 @@ import App from './App.vue'
 import { router } from './app/router'
 import { pinia } from './app/pinia'
 
-createApp(App).use(pinia).use(router).use(ElementPlus).mount('#app')
+const app = createApp(App)
+
+app.use(pinia)
+app.use(router)
+app.use(ElementPlus)
+
+await router.isReady()
+app.mount('#app')

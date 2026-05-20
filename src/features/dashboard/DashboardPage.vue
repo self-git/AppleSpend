@@ -15,9 +15,10 @@ import AppleSectionTitle from '@/components/ui/AppleSectionTitle.vue'
 import { calculateSummary, formatSummaryMoney } from './summary-calculator'
 import { useTransactionStore } from '@/features/transactions/transaction-store'
 import { formatMoney } from '@/lib/money'
+import { categoryLabel, paymentMethodLabel } from '@/features/transactions/transaction-labels'
 
 const store = useTransactionStore()
-const summary = computed(() => calculateSummary(store.transactions, store.assets))
+const summary = computed(() => calculateSummary(store.transactions, store.assets, store.storeCreditEntries, store.ruleSettings, store.dataQualityIssues))
 const recentSpendFilter = ref<'all' | 'paid' | 'free'>('all')
 const recentSpendOptions = [
   { label: '全部', value: 'all' },
@@ -144,7 +145,7 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
     <ApplePageHeader
       eyebrow="Dashboard"
       title="你的 Apple 生态真实支出"
-      description="以实际现金支出为主口径，分层展示硬件、软件、订阅和 Store Credit 流转。"
+      description="以实际现金支出为主口径，分层展示硬件、软件、订阅和余额流转。"
     >
       <template #actions>
         <RouterLink to="/import">
@@ -161,7 +162,7 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
               label="这些年在 Apple 生态中的实际现金支出"
               :value="formatSummaryMoney(summary.cashSpend)"
               tone="hero"
-              detail="不重复计入 Store Credit 消费，免费 / 限免项目不计入支出，退款按净额扣除。"
+              detail="不重复计入余额消费，免费 / 限免项目不计入支出，退款按净额扣除。"
             />
             <div class="grid grid-cols-2 gap-3">
               <div class="rounded-md bg-apple-bg p-4">
@@ -209,7 +210,7 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
         </AppleCard>
 
         <AppleCard tone="raised">
-          <AppleSectionTitle title="Apple Store 充值" description="区分充值、余额消费和当前剩余，避免重复计算。" />
+          <AppleSectionTitle title="Apple 账户余额" description="区分充值、余额消费和当前剩余，避免重复计算。" />
           <div class="grid gap-3 md:grid-cols-3">
             <div class="rounded-[var(--radius-panel)] bg-apple-bg p-4">
               <p class="text-sm text-apple-gray">累计充值</p>
@@ -235,6 +236,9 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
             <div class="mt-4 h-3 overflow-hidden rounded-full bg-apple-bg">
               <div class="h-full rounded-full bg-apple-blue transition-all duration-500" :style="{ width: `${storeCreditSpentRatio}%` }" />
             </div>
+            <div class="mt-4 flex justify-end">
+              <RouterLink to="/store-credit" class="text-sm font-medium text-apple-blue">查看余额详情</RouterLink>
+            </div>
           </div>
         </AppleCard>
       </div>
@@ -246,7 +250,7 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
             <div v-for="item in summary.topTransactions" :key="item.id" class="flex items-center justify-between gap-4 py-3">
               <div class="min-w-0">
                 <p class="truncate font-medium">{{ item.title }}</p>
-                <p class="mt-1 text-sm text-apple-gray">{{ item.date }} · {{ item.category }}</p>
+                <p class="mt-1 text-sm text-apple-gray">{{ item.date }} · {{ categoryLabel(item.category) }}</p>
               </div>
               <p class="shrink-0 font-semibold">{{ formatMoney(item.amount, item.currency) }}</p>
             </div>
@@ -261,7 +265,7 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
             <div v-for="item in recentTransactions" :key="item.id" class="flex items-center justify-between gap-4 py-3">
               <div class="min-w-0">
                 <p class="truncate font-medium">{{ item.title }}</p>
-                <p class="mt-1 text-sm text-apple-gray">{{ item.date }} · {{ item.paymentMethod || 'Unknown' }}</p>
+                <p class="mt-1 text-sm text-apple-gray">{{ item.date }} · {{ paymentMethodLabel(item.paymentMethod) }}</p>
               </div>
               <AppleDataBadge :tone="paymentBadge(item).tone">
                 {{ paymentBadge(item).label }}
@@ -276,6 +280,9 @@ function paymentBadge(item: { cashImpact: boolean; paymentMethod?: string; isFre
         <AppleSectionTitle title="数据质量提示" />
         <div class="flex flex-wrap gap-2">
           <AppleDataBadge v-for="warning in summary.warnings" :key="warning" tone="orange">{{ warning }}</AppleDataBadge>
+        </div>
+        <div class="mt-4">
+          <RouterLink to="/data-quality" class="text-sm font-medium text-apple-blue">查看完整问题清单</RouterLink>
         </div>
       </AppleCard>
     </div>
