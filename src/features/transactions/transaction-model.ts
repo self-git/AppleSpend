@@ -1,4 +1,8 @@
-export type AppleTransactionSource = 'apple_store' | 'app_store' | 'subscription' | 'store_credit' | 'applecare'
+export type AppleTransactionSource = 'apple_store' | 'app_store' | 'subscription' | 'store_credit' | 'applecare' | 'external_retail'
+
+export type AppleRetailPlatform = 'jd' | 'tmall' | 'taobao' | 'apple_store' | 'other'
+
+export type DeviceFingerprintSource = 'invoice_sn' | 'invoice_imei1' | 'invoice_imei2'
 
 export type AppleAssetCategory =
   | 'iPhone'
@@ -19,9 +23,13 @@ export interface AppleTransaction {
   subtitle?: string
   category: string
   amount: string
+  billValueAmount?: string
   currency: string
   paymentMethod?: string
   orderNumber?: string
+  platform?: AppleRetailPlatform
+  sellerName?: string
+  invoiceNumber?: string
   rawType?: string
   cashImpact: boolean
   billValueImpact: boolean
@@ -40,9 +48,18 @@ export interface AppleAsset {
   category: AppleAssetCategory
   purchaseDate: string
   purchasePrice: string
+  billValueAmount?: string
   currency: string
   orderNumber: string
   sourceTransactionId: string
+  platform?: AppleRetailPlatform
+  sellerName?: string
+  invoiceNumber?: string
+  deviceFingerprint?: string
+  snFingerprint?: string
+  imeiFingerprints?: string[]
+  fingerprintAlgorithm?: 'hmac-sha256-v1'
+  fingerprintSources?: DeviceFingerprintSource[]
   status: 'using' | 'sold' | 'retired' | 'gifted' | 'lost' | 'unknown'
   imageId?: string
   imageUrl?: string

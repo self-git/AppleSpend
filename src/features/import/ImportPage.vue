@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import AppleButton from '@/components/ui/AppleButton.vue'
 import AppleCard from '@/components/ui/AppleCard.vue'
@@ -94,6 +95,9 @@ async function clearData() {
       description="V2 支持单 CSV、多 CSV 和 Apple 数据导出 ZIP。所有文件只在浏览器本地解析，并保存到 IndexedDB。"
     >
       <template #actions>
+        <RouterLink to="/import/external-retail">
+          <AppleButton>导入外部发票</AppleButton>
+        </RouterLink>
         <AppleButton variant="danger" :disabled="!store.hasData" @click="clearData">清空本地数据</AppleButton>
       </template>
     </ApplePageHeader>

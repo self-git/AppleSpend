@@ -14,6 +14,7 @@ import { humanDurationSince } from '@/lib/date'
 import { formatMoney, parseMoney } from '@/lib/money'
 import { resolveAssetImage } from '@/features/media-assets/image-resolver'
 import { buildAssetDetails, type AssetDetailViewModel } from './device-lifecycle-selectors'
+import { platformLabel } from '@/features/external-retail/external-retail-to-ledger'
 
 const store = useTransactionStore()
 const selectedCategory = ref<AppleAssetCategory | 'All'>('All')
@@ -111,7 +112,9 @@ async function saveLifecycle() {
                 <div class="flex items-start justify-between gap-3">
                   <div>
                     <p class="text-xl font-semibold leading-snug">{{ detail.asset.name }}</p>
-                    <p class="mt-2 text-sm text-apple-gray">{{ detail.asset.category }} · {{ detail.asset.purchaseDate }}</p>
+                    <p class="mt-2 text-sm text-apple-gray">
+                      {{ detail.asset.category }} · {{ detail.asset.purchaseDate }}{{ detail.asset.platform ? ` · ${platformLabel(detail.asset.platform)}` : '' }}
+                    </p>
                   </div>
                   <AppleDataBadge>{{ detail.lifecycle.status }}</AppleDataBadge>
                 </div>
@@ -132,6 +135,9 @@ async function saveLifecycle() {
                     <p class="text-apple-gray">最后出现</p>
                     <p class="mt-1 truncate font-semibold">{{ detail.lifecycle.lastSeenDate || detail.appearances[0]?.lastSeenDate || '未知' }}</p>
                   </div>
+                </div>
+                <div v-if="detail.asset.deviceFingerprint" class="mt-4">
+                  <AppleDataBadge>{{ detail.asset.deviceFingerprint }}</AppleDataBadge>
                 </div>
               </div>
             </div>
@@ -187,6 +193,27 @@ async function saveLifecycle() {
           </div>
           <el-input v-model="lifecycleForm.note" class="mt-4" type="textarea" :rows="3" placeholder="备注" />
           <el-button class="mt-4" type="primary" @click="saveLifecycle">保存生命周期</el-button>
+        </AppleCard>
+
+        <AppleCard v-if="selectedDetail.asset.platform || selectedDetail.asset.deviceFingerprint" :interactive="false">
+          <AppleSectionTitle title="购买凭证" description="外部平台发票只保存不可逆设备短码，不保存原始 SN / IMEI。" />
+          <div class="grid gap-3 md:grid-cols-3">
+            <div class="rounded-md bg-apple-bg p-4">
+              <p class="text-sm text-apple-gray">平台 / 销售方</p>
+              <p class="mt-1 font-semibold">{{ selectedDetail.asset.platform ? platformLabel(selectedDetail.asset.platform) : '未知' }}</p>
+              <p class="mt-1 truncate text-sm text-apple-gray">{{ selectedDetail.asset.sellerName || '无销售方' }}</p>
+            </div>
+            <div class="rounded-md bg-apple-bg p-4">
+              <p class="text-sm text-apple-gray">发票 / 订单</p>
+              <p class="mt-1 font-semibold">{{ selectedDetail.asset.invoiceNumber || selectedDetail.asset.orderNumber || '未知' }}</p>
+              <p class="mt-1 text-sm text-apple-gray">票面价值 {{ formatMoney(selectedDetail.asset.billValueAmount || selectedDetail.asset.purchasePrice, selectedDetail.asset.currency) }}</p>
+            </div>
+            <div class="rounded-md bg-apple-bg p-4">
+              <p class="text-sm text-apple-gray">识别短码</p>
+              <p class="mt-1 font-semibold">{{ selectedDetail.asset.deviceFingerprint || '未生成' }}</p>
+              <p class="mt-1 truncate text-sm text-apple-gray">{{ selectedDetail.asset.imeiFingerprints?.join('、') || '无 IMEI 短码' }}</p>
+            </div>
+          </div>
         </AppleCard>
 
         <div class="grid gap-6 lg:grid-cols-3">

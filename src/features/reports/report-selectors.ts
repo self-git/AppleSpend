@@ -54,8 +54,8 @@ export function buildYearlyReport(
   return {
     year,
     cashSpend: sumAmounts(yearlyTransactions.filter((item) => item.effectiveCashImpact)),
-    hardwareSpend: sumAmounts(yearlyTransactions.filter((item) => item.effectiveCashImpact && item.source === 'apple_store')),
-    softwareSpend: sumAmounts(yearlyTransactions.filter((item) => item.effectiveCashImpact && item.source !== 'apple_store')),
+    hardwareSpend: sumAmounts(yearlyTransactions.filter((item) => item.effectiveCashImpact && (item.source === 'apple_store' || item.source === 'external_retail'))),
+    softwareSpend: sumAmounts(yearlyTransactions.filter((item) => item.effectiveCashImpact && item.source !== 'apple_store' && item.source !== 'external_retail')),
     subscriptionSpend: subscriptionSummary.totalSpend,
     storeCreditRecharge: storeCreditSummary.recharge,
     storeCreditSpend: storeCreditSummary.spend,

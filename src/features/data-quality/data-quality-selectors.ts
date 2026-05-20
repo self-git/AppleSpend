@@ -85,8 +85,30 @@ export function buildDataQualityIssues(input: DataQualityInput): DataQualityIssu
 
   collectDeviceEventIssues(input.assets, input.repairEvents, input.supportCases, input.deviceAppearances).forEach(add)
   collectAmountMismatchIssues(input.transactions, input.paymentEvidence).forEach(add)
+  collectDuplicateAssetFingerprintIssues(input.assets).forEach(add)
 
   return Array.from(issues.values()).sort((a, b) => severityRank(b.severity) - severityRank(a.severity))
+}
+
+function collectDuplicateAssetFingerprintIssues(assets: AppleAsset[]): DataQualityIssue[] {
+  const groups = new Map<string, AppleAsset[]>()
+  assets.forEach((asset) => {
+    if (!asset.deviceFingerprint) return
+    groups.set(asset.deviceFingerprint, [...(groups.get(asset.deviceFingerprint) ?? []), asset])
+  })
+
+  return Array.from(groups.entries())
+    .filter(([, groupedAssets]) => groupedAssets.length > 1)
+    .map(([fingerprint, groupedAssets]) => ({
+      id: createId('issue', ['duplicate_asset_fingerprint', fingerprint]),
+      severity: 'warning' as const,
+      type: 'duplicate_candidate' as const,
+      title: `疑似重复设备 ${fingerprint}`,
+      description: `有 ${groupedAssets.length} 个资产使用同一设备识别短码，建议检查是否重复导入。`,
+      entityType: 'asset',
+      entityIds: groupedAssets.map((asset) => asset.id),
+      suggestedAction: '保留一条资产记录，或确认它们是否来自同一台设备的多张凭证。',
+    }))
 }
 
 function collectDeviceEventIssues(

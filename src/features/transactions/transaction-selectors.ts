@@ -34,8 +34,8 @@ export function calculateSummary(
   const effectiveTransactions = transactions.map((item) => applyRulesToTransaction(item, ruleSettings)).filter((item) => !item.excluded)
   const cashTransactions = effectiveTransactions.filter((item) => item.effectiveCashImpact)
   const billTransactions = effectiveTransactions.filter((item) => item.billValueImpact)
-  const hardwareTransactions = cashTransactions.filter((item) => item.source === 'apple_store')
-  const softwareTransactions = cashTransactions.filter((item) => item.source !== 'apple_store')
+  const hardwareTransactions = cashTransactions.filter((item) => item.source === 'apple_store' || item.source === 'external_retail')
+  const softwareTransactions = cashTransactions.filter((item) => item.source !== 'apple_store' && item.source !== 'external_retail')
   const storeCreditSummary = calculateStoreCreditSummary(transactions, storeCreditEntries, ruleSettings)
 
   const years = Array.from(new Set(effectiveTransactions.map((item) => getYear(item.date)))).filter((year) => year !== '未知').sort()
@@ -45,15 +45,15 @@ export function calculateSummary(
     return {
       year,
       cash: sumTransactions(yearlyCash),
-      bill: sumTransactions(yearly.filter((item) => item.billValueImpact)),
-      hardware: sumTransactions(yearlyCash.filter((item) => item.source === 'apple_store')),
-      software: sumTransactions(yearlyCash.filter((item) => item.source !== 'apple_store')),
+      bill: sumTransactions(yearly.filter((item) => item.billValueImpact), 'bill'),
+      hardware: sumTransactions(yearlyCash.filter((item) => item.source === 'apple_store' || item.source === 'external_retail')),
+      software: sumTransactions(yearlyCash.filter((item) => item.source !== 'apple_store' && item.source !== 'external_retail')),
     }
   })
 
   return {
     cashSpend: sumTransactions(cashTransactions),
-    billValue: sumTransactions(billTransactions),
+    billValue: sumTransactions(billTransactions, 'bill'),
     hardwareSpend: sumTransactions(hardwareTransactions),
     softwareSpend: sumTransactions(softwareTransactions),
     storeCreditSpend: storeCreditSummary.spend,
@@ -66,7 +66,7 @@ export function calculateSummary(
     byPayment: groupByAmount(cashTransactions, (item) => paymentMethodLabel(item.paymentMethod)),
     topTransactions: [...effectiveTransactions]
       .filter((item) => item.billValueImpact)
-      .sort((a, b) => parseMoney(b.amount).abs().cmp(parseMoney(a.amount).abs()))
+      .sort((a, b) => transactionBillValue(b).abs().cmp(transactionBillValue(a).abs()))
       .slice(0, 10),
     recentTransactions: [...effectiveTransactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10),
     warnings: buildQualityWarnings(effectiveTransactions, assets, issues),
@@ -77,8 +77,12 @@ export function formatSummaryMoney(value: Decimal, currency = 'CNY'): string {
   return formatMoney(value, currency)
 }
 
-export function sumTransactions(transactions: Array<{ amount: string }>): Decimal {
-  return transactions.reduce((total, item) => total.plus(parseMoney(item.amount)), new Decimal(0))
+export function sumTransactions(transactions: Array<{ amount: string; billValueAmount?: string }>, mode: 'cash' | 'bill' = 'cash'): Decimal {
+  return transactions.reduce((total, item) => total.plus(mode === 'bill' ? transactionBillValue(item) : parseMoney(item.amount)), new Decimal(0))
+}
+
+function transactionBillValue(transaction: { amount: string; billValueAmount?: string }): Decimal {
+  return parseMoney(transaction.billValueAmount || transaction.amount)
 }
 
 function groupByAmount<T extends { amount: string }>(transactions: T[], getKey: (transaction: T) => string): Array<{ name: string; value: Decimal }> {

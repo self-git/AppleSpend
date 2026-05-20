@@ -11,6 +11,7 @@ const primaryNavItems = [
   { path: '/ledger', label: '明细' },
   { path: '/assets', label: '资产' },
   { path: '/import', label: '导入' },
+  { path: '/import/external-retail', label: '发票' },
 ]
 
 const secondaryNavItems = [

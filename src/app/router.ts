@@ -14,6 +14,7 @@ export const router = createRouter({
   routes: [
     { path: '/', redirect: '/dashboard' },
     { path: '/import', name: 'import', component: ImportPage },
+    { path: '/import/external-retail', name: 'external-retail-import', component: () => import('@/features/external-retail/ExternalRetailImportPage.vue') },
     { path: '/dashboard', name: 'dashboard', component: DashboardPage },
     { path: '/ledger', name: 'ledger', component: LedgerPage },
     { path: '/assets', name: 'assets', component: AssetsPage },

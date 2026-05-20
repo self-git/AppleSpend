@@ -23,6 +23,7 @@ export function sourceLabel(source: string | undefined): string {
     subscription: '订阅',
     store_credit: '余额',
     applecare: 'AppleCare',
+    external_retail: '外部平台',
     media_transactions: '媒体交易',
     store_credit_history: '余额历史',
     manual: '手动',

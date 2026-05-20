@@ -52,6 +52,21 @@ class AppleLedgerDb extends Dexie {
       dataQualityIssues: '&id, severity, type, dismissed',
       ruleSettings: '&id, type, enabled, updatedAt',
     })
+    this.version(3).stores({
+      transactions: '&id, source, date, category, paymentMethod, orderNumber, invoiceNumber',
+      assets: '&id, category, purchaseDate, orderNumber, status, invoiceNumber, deviceFingerprint',
+      importBatches: '&id, importedAt',
+      subscriptions: '&id, serviceName, status, latestEventDate',
+      subscriptionEvents: '&id, subscriptionId, date, eventType',
+      storeCreditEntries: '&id, date, direction, relatedTransactionId',
+      deviceLifecycles: '&assetId, status, serialNumber, isPrimaryDevice',
+      repairEvents: '&id, relatedAssetId, date',
+      supportCases: '&id, relatedAssetId, openedDate, status',
+      deviceAppearances: '&id, relatedAssetId, lastSeenDate, serialNumber',
+      paymentEvidence: '&id, date, orderNumber, paymentMethod',
+      dataQualityIssues: '&id, severity, type, dismissed',
+      ruleSettings: '&id, type, enabled, updatedAt',
+    })
   }
 }
 

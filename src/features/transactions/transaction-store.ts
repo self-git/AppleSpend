@@ -68,7 +68,7 @@ function dedupeById<T extends { id: string }>(existing: T[], incoming: T[]): T[]
 function normalizeHardwareCategories(transactions: AppleTransaction[], assets: AppleAsset[]) {
   let changed = false
   const normalizedTransactions = transactions.map((transaction) => {
-    if (transaction.source !== 'apple_store') return transaction
+    if (transaction.source !== 'apple_store' && transaction.source !== 'external_retail') return transaction
     const category = classifyHardware(transaction.title)
     if (category === transaction.category) return transaction
     changed = true
